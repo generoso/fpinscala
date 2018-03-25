@@ -50,19 +50,61 @@ object List { // `List` companion object. Contains functions for creating and wo
     foldRight(ns, 1.0)(_ * _) // `_ * _` is more concise notation for `(x,y) => x * y`; see sidebar
 
 
-  def tail[A](l: List[A]): List[A] = ???
+  def tail[A](l: List[A]): List[A] = l match {
+    case Nil => sys.error("tail of empty list")
+    case Cons(_, xs) => xs // use _ if the argument is not used
+  }
 
-  def setHead[A](l: List[A], h: A): List[A] = ???
+  def setHead[A](l: List[A], h: A): List[A] = l match {
+    case Nil => sys.error("can't set head of empty list")
+    case Cons(_, xs) => Cons(h, xs)
+  }
 
-  def drop[A](l: List[A], n: Int): List[A] = ???
+  def drop[A](l: List[A], n: Int): List[A] = {
+    if (n <= 0) l
+    else {
+      l match {
+        case Nil => Nil
+        case Cons(_, xs) => drop(xs, n - 1)
+      }
+    }
+  }
 
-  def dropWhile[A](l: List[A], f: A => Boolean): List[A] = ???
+  def dropWhile[A](l: List[A], f: A => Boolean): List[A] = {
+    l match {
+      case Cons(x, xs) if f(x) => dropWhile(xs, f)
+      case _ => l // Nil or !f(x)
+    }
+  }
 
-  def init[A](l: List[A]): List[A] = ???
+  def init[A](l: List[A]): List[A] = {
+    @annotation.tailrec
+    def loop(a: List[A], ll: List[A]): List[A] = ll match {
+      case Nil => sys.error("init on empty list")
+      case Cons(x, Nil) => a
+      case Cons(x, xs) => loop(Cons(x, a), xs)
+    }
+
+    @annotation.tailrec
+    def reverse(v: List[A], a: List[A]): List[A] = v match {
+      case Nil => a
+      case Cons(x, xs) => reverse(xs, Cons(x, a))
+    }
+
+    reverse(loop(List(), l), List())
+  }
 
   def length[A](l: List[A]): Int = ???
 
   def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B = ???
 
   def map[A,B](l: List[A])(f: A => B): List[B] = ???
+}
+
+object ListTest {
+
+  def main(args: Array[String]): Unit = {
+    val l = List.init(List(1,2,3,4,5))
+    println(l)
+  }
 }
