@@ -130,7 +130,61 @@ object List { // `List` companion object. Contains functions for creating and wo
     foldRight(ll, List[A]())(append2)
   }
 
-  def map[A, B](l: List[A])(f: A => B): List[B] = ???
+  def addOne(l: List[Int]): List[Int] = {
+    foldRight(l, List[Int]())((x, z) => Cons(x + 1, z))
+  }
+
+  def doubleToString(l: List[Double]): List[String] = {
+    foldRight(l, Nil: List[String])((d, z) => Cons(d.toString, z))
+  }
+
+
+  def map[A, B](l: List[A])(f: A => B): List[B] = {
+    foldRight(l, Nil: List[B])((a, lb) => Cons(f(a), lb))
+  }
+
+  def filter[A](l: List[A])(f: A => Boolean): List[A] = {
+    foldRight(l, Nil: List[A])((a, la) => if (f(a)) Cons(a, la) else la)
+  }
+
+  def flatMap[A, B](l: List[A])(f: A => List[B]): List[B] = {
+    foldRight(l, Nil: List[B])((a, lb) => append2(f(a), lb))
+  }
+
+  def filterViaFlatMap[A](l: List[A])(f: A => Boolean): List[A] = {
+    flatMap(l)((a: A) => if (f(a)) List(a) else Nil)
+  }
+
+  def zipSum(l: List[Int], k: List[Int]): List[Int] = {
+    def inZip(ll: List[Int], kk: List[Int], acc: List[Int]): List[Int] = ll match {
+      case Nil => acc
+      case Cons(llh, llt) => kk match {
+        case Nil => acc
+        case Cons(kkh, kkt) => Cons(llh + kkh, inZip(llt, kkt, acc))
+      }
+    }
+
+    inZip(l, k, Nil: List[Int])
+  }
+
+  def zipSum1(l: List[Int], k: List[Int]): List[Int] = {
+    @annotation.tailrec
+    def inZip(ll: List[Int], kk: List[Int], acc: List[Int]): List[Int] = ll match {
+      case Nil => acc
+      case Cons(llh, llt) => kk match {
+        case Nil => acc
+        case Cons(kkh, kkt) => inZip(llt, kkt, Cons(llh + kkh, acc))
+      }
+    }
+
+    reverse(inZip(l, k, Nil: List[Int]))
+  }
+
+  def zipWith[A, B](l: List[A], k: List[A])(f: (A, A) => B): List[B] = (l, k) match {
+    case (Nil, _) => Nil
+    case (_, Nil) => Nil
+    case (Cons(hl, tl), Cons(hk, tk)) => Cons(f(hl, hk), zipWith(tl, tk)(f))
+  }
 
 }
 
@@ -146,5 +200,19 @@ object ListTest {
     println("append: " + List.append2(l, List(12, 13)))
 
     println("concat: " + List.concat(List(List(1, 2), List(3, 4), List(5, 6))))
+
+    println("add 1: " + List.addOne(List(1, 2, 3)))
+
+    println("double to string: " + List.doubleToString(List(1, 2, 3)))
+
+    println("filter: " + List.filter(List(1, 2, 3, 4, 5, 6))(_ % 2 == 0))
+
+    println("flatMap: " + List.flatMap(List(1, 2, 3))((x: Int) => List(x, x)))
+
+    println("filter via flatMap: " + List.filterViaFlatMap(List(1, 2, 3, 4, 5, 6))(_ % 2 == 0))
+
+    println("zipSum: " + List.zipSum1(List(1, 2, 3), List(4, 5, 6)))
+
+    println("zipWith: " + List.zipWith(List(1, 2, 3, 5, 4), List(4, 5, 6))(_ + _))
   }
 }
