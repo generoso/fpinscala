@@ -186,6 +186,38 @@ object List { // `List` companion object. Contains functions for creating and wo
     case (Cons(hl, tl), Cons(hk, tk)) => Cons(f(hl, hk), zipWith(tl, tk)(f))
   }
 
+
+  /*
+   * These implementations are not tailrec
+   */
+
+  def startsWith[A](sup: List[A], sub: List[A]): Boolean = (sup, sub) match {
+    case (_, Nil) => true
+    case (Nil, _) => false
+    case (Cons(hl, tl), Cons(hk, tk)) => (hl == hk) && startsWith(tl, tk)
+  }
+
+  def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = (sup, sub) match {
+    case (_, Nil) => true
+    case (Nil, _) => false
+    case (Cons(hl, tl), Cons(hk, tk)) => startsWith(sup, sub) || hasSubsequence(tl, sub)
+  }
+
+  /*
+   * These implementations are tailerc
+   */
+
+  def startsWithTr[A](sup: List[A], sub: List[A]): Boolean = (sup, sub) match {
+    case (_, Nil) => true
+    case (Cons(hl, tl), Cons(hk, tk)) if hl == hk => startsWithTr(tl, tk)
+    case _ => false
+  }
+
+  def hasSubsequenceTr[A](sup: List[A], sub: List[A]): Boolean = sup match {
+    case Nil => sub == Nil
+    case _ if startsWith(sup, sub) => true
+    case Cons(_, tl) => hasSubsequenceTr(tl, sub)
+  }
 }
 
 object ListTest {
@@ -214,5 +246,15 @@ object ListTest {
     println("zipSum: " + List.zipSum1(List(1, 2, 3), List(4, 5, 6)))
 
     println("zipWith: " + List.zipWith(List(1, 2, 3, 5, 4), List(4, 5, 6))(_ + _))
+
+    println("startsWith: " + List.startsWith(List(1, 2, 3, 4), List(1, 2)))
+
+    println("startsWith: " + List.startsWith(List(1, 2, 3, 4), List(2, 3)))
+
+    println("hasSubsequence: " + List.hasSubsequence(List(1, 2, 3, 4), List(2, 3)))
+
+    println("startsWith: " + List.startsWithTr(List(1, 2, 3, 4), List(2, 3)))
+
+    println("hasSubsequence: " + List.hasSubsequenceTr(List(1, 2, 3, 4), List(2, 3)))
   }
 }
