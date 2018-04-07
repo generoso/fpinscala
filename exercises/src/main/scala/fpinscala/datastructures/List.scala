@@ -10,20 +10,20 @@ case class Cons[+A](head: A, tail: List[A]) extends List[A]
 object List { // `List` companion object. Contains functions for creating and working with lists.
   def sum(ints: List[Int]): Int = ints match { // A function that uses pattern matching to add up a list of integers
     case Nil => 0 // The sum of the empty list is 0.
-    case Cons(x,xs) => x + sum(xs) // The sum of a list starting with `x` is `x` plus the sum of the rest of the list.
+    case Cons(x, xs) => x + sum(xs) // The sum of a list starting with `x` is `x` plus the sum of the rest of the list.
   }
 
   def product(ds: List[Double]): Double = ds match {
     case Nil => 1.0
     case Cons(0.0, _) => 0.0
-    case Cons(x,xs) => x * product(xs)
+    case Cons(x, xs) => x * product(xs)
   }
 
   def apply[A](as: A*): List[A] = // Variadic function syntax
     if (as.isEmpty) Nil
     else Cons(as.head, apply(as.tail: _*))
 
-  val x = List(1,2,3,4,5) match {
+  val x = List(1, 2, 3, 4, 5) match {
     case Cons(x, Cons(2, Cons(4, _))) => x
     case Nil => 42
     case Cons(x, Cons(y, Cons(3, Cons(4, _)))) => x + y
@@ -34,19 +34,19 @@ object List { // `List` companion object. Contains functions for creating and wo
   def append[A](a1: List[A], a2: List[A]): List[A] =
     a1 match {
       case Nil => a2
-      case Cons(h,t) => Cons(h, append(t, a2))
+      case Cons(h, t) => Cons(h, append(t, a2))
     }
 
-  def foldRight[A,B](as: List[A], z: B)(f: (A, B) => B): B = // Utility functions
+  def foldRight[A, B](as: List[A], z: B)(f: (A, B) => B): B = // Utility functions
     as match {
       case Nil => z
       case Cons(x, xs) => f(x, foldRight(xs, z)(f))
     }
 
-  def sum2(ns: List[Int]) =
-    foldRight(ns, 0)((x,y) => x + y)
+  def sum2(ns: List[Int]): Int =
+    foldRight(ns, 0)((x, y) => x + y)
 
-  def product2(ns: List[Double]) =
+  def product2(ns: List[Double]): Double =
     foldRight(ns, 1.0)(_ * _) // `_ * _` is more concise notation for `(x,y) => x * y`; see sidebar
 
 
@@ -94,17 +94,57 @@ object List { // `List` companion object. Contains functions for creating and wo
     reverse(loop(List(), l), List())
   }
 
-  def length[A](l: List[A]): Int = ???
+  def length[A](l: List[A]): Int = {
+    foldRight(l, 0)((_, b) => b + 1)
+  }
 
-  def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B = ???
+  @annotation.tailrec
+  def foldLeft[A, B](l: List[A], z: B)(f: (B, A) => B): B = l match {
+    case Nil => z
+    case Cons(x, xs) => foldLeft(xs, f(z, x))(f)
+  }
 
-  def map[A,B](l: List[A])(f: A => B): List[B] = ???
+  def sum3(ns: List[Int]): Int =
+    foldLeft(ns, 0)(_ + _)
+
+  def product3(ns: List[Double]): Double =
+    foldLeft(ns, 1.0)(_ * _)
+
+  def length2[A](l: List[A]): Int = {
+    foldLeft(l, 0)((b, _) => b + 1)
+  }
+
+  def reverse[A](l: List[A]): List[A] = {
+    foldLeft(l, Nil: List[A])((al, e) => Cons(e, al))
+  }
+
+  def foldRightViaFoldLeft[A, B](l: List[A], z: B)(f: (A, B) => B): B = {
+    foldLeft(reverse(l), z)((b, a) => f(a, b))
+  }
+
+  def append2[A](l: List[A], l2: List[A]): List[A] = {
+    foldRight(l, l2)(Cons(_, _))
+  }
+
+  def concat[A](ll: List[List[A]]): List[A] = {
+    foldRight(ll, List[A]())(append2)
+  }
+
+  def map[A, B](l: List[A])(f: A => B): List[B] = ???
+
 }
 
 object ListTest {
 
   def main(args: Array[String]): Unit = {
-    val l = List.init(List(1,2,3,4,5))
+    val l = List.init(List(1, 2, 3, 4, 5))
     println(l)
+    println("Length: " + List.length(l))
+    println("fold left len: " + List.length2(l))
+    println("reverse: " + List.reverse(l))
+    println("sum: " + List.foldRightViaFoldLeft(l, 0)(_ + _))
+    println("append: " + List.append2(l, List(12, 13)))
+
+    println("concat: " + List.concat(List(List(1, 2), List(3, 4), List(5, 6))))
   }
 }
