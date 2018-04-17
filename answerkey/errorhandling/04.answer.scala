@@ -6,6 +6,11 @@ def sequence[A](a: List[Option[A]]): Option[List[A]] =
     case Nil => Some(Nil)
     case h :: t => h flatMap (hh => sequence(t) map (hh :: _))
   }
+
+// Note: sequence(t) map (hh :: _)
+//       means putting hh (current A head element) as head of a list composed by the A elements of the current tail (t)
+
+
 /*
 It can also be implemented using `foldRight` and `map2`. The type annotation on `foldRight` is needed here; otherwise Scala wrongly infers the result type of the fold as `Some[Nil.type]` and reports a type error (try it!). This is an unfortunate consequence of Scala using subtyping to encode algebraic data types.
 */

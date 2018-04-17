@@ -78,11 +78,38 @@ object Option {
     if (xs.isEmpty) None
     else Some(xs.sum / xs.length)
 
-  def variance(xs: Seq[Double]): Option[Double] = ???
+  // SUM ( x - m ) ^2 / n
+  def variance(xs: Seq[Double]): Option[Double] = {
+    mean(xs).flatMap(m => mean(xs.map(x => math.pow(x - m, 2))))
+  }
 
-  def map2[A, B, C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = ???
+  def map2[A, B, C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = {
+    a.flatMap(sa => b.map(sb => f(sa, sb)))
 
-  def sequence[A](a: List[Option[A]]): Option[List[A]] = ???
+    // with for-comp
+    // for (aa <- a; bb <- b) yield f(aa, bb)
+  }
+
+  def sequence[A](a: List[Option[A]]): Option[List[A]] = {
+    def s(l: List[Option[A]], acc: Option[List[A]]): Option[List[A]] = {
+      l match {
+        case Nil => acc
+        case None :: _ => None
+        case x :: xs => s(xs, x.flatMap(sx => acc.map(sacc => sx :: sacc)))
+      }
+    }
+
+    s(a, Some(List())).map(_.reverse)
+  }
+
+  def sequence2[A](a: List[Option[A]]): Option[List[A]] = {
+    a.foldRight[Option[List[A]]](Some(List()))((x, acc) => x.flatMap(sx => acc.map(sacc => sx :: sacc)))
+  }
+
+  def sequence3[A](a: List[Option[A]]): Option[List[A]] = a match {
+    case Nil => Some(Nil)
+    case x :: xs => x.flatMap(xx => sequence3(xs).map(xxs => xx :: xxs))
+  }
 
   def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = ???
 }
@@ -100,5 +127,13 @@ object OptionTest {
     println("filter: " + Some(2).filter(_ % 2 == 0))
     println("filter: " + some.filter(_ % 2 == 0))
     println("filter: " + none.filter(_ % 2 == 0))
+
+    println("seq: " + Option.sequence(List(Some(1), Some(2), Some(3))))
+    println("seq: " + Option.sequence(List(Some(1), None, Some(3))))
+    println("seq: " + Option.sequence2(List(Some(1), Some(2), Some(3))))
+    println("seq: " + Option.sequence2(List(Some(1), None, Some(3))))
+    println("seq: " + Option.sequence3(List(Some(1), Some(2), Some(3))))
+    println("seq: " + Option.sequence3(List(Some(1), None, Some(3))))
+
   }
 }
