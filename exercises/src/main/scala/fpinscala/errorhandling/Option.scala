@@ -111,13 +111,33 @@ object Option {
     case x :: xs => x.flatMap(xx => sequence3(xs).map(xxs => xx :: xxs))
   }
 
-  def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = ???
+  def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = {
+    a.foldRight[Option[List[B]]](Some(Nil))(
+      (aa: A, acc: Option[List[B]]) => f(aa).flatMap(sx => acc.map(sacc => sx :: sacc)))
+  }
+
+  def traverse2[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = {
+    a.foldRight[Option[List[B]]](Some(Nil))(
+      (aa: A, acc: Option[List[B]]) => map2(f(aa), acc)(_ :: _))
+  }
+
+  def sequenceViaTraverse[A](a: List[Option[A]]): Option[List[A]] = {
+    traverse(a)(identity)
+  }
 }
 
 object OptionTest {
 
   val some: Option[Int] = Some(1)
   val none: Option[Int] = None
+
+  def Try[A](v: => A): Option[A] = {
+    try {
+      Some(v)
+    } catch {
+      case e: Exception => None
+    }
+  }
 
   def main(args: Array[String]): Unit = {
     println("map: " + some.map(_ + 1))
@@ -134,6 +154,15 @@ object OptionTest {
     println("seq: " + Option.sequence2(List(Some(1), None, Some(3))))
     println("seq: " + Option.sequence3(List(Some(1), Some(2), Some(3))))
     println("seq: " + Option.sequence3(List(Some(1), None, Some(3))))
+
+    println("traverse: " + Option.traverse[String, Int](List("1", "2", "3"))(x => Try {x.toInt}))
+    println("traverse: " + Option.traverse[String, Int](List("1", "not", "3"))(x => Try {x.toInt}))
+
+    println("traverse2: " + Option.traverse2[String, Int](List("1", "2", "3"))(x => Try {x.toInt}))
+    println("traverse2: " + Option.traverse2[String, Int](List("1", "not", "3"))(x => Try {x.toInt}))
+
+    println("seq via traverse: " + Option.sequenceViaTraverse(List(Some(1), Some(2), Some(3))))
+    println("seq via traverse: " + Option.sequenceViaTraverse(List(Some(1), None, Some(3))))
 
   }
 }
