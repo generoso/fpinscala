@@ -124,6 +124,7 @@ object Option {
   def sequenceViaTraverse[A](a: List[Option[A]]): Option[List[A]] = {
     traverse(a)(identity)
   }
+
 }
 
 object OptionTest {
