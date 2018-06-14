@@ -92,12 +92,37 @@ object Stream {
 
   val ones: Stream[Int] = Stream.cons(1, ones)
 
-  def from(n: Int): Stream[Int] = ???
+  def constant[A](a: A): Stream[A] = Stream.cons(a, constant(a))
 
-  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = ???
+  def from(n: Int): Stream[Int] = Stream.cons(n, from(n + 1))
+
+  def fibs(a: Int, b: Int): Stream[Int] = Stream.cons(a, fibs(b, a + b))
+
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = {
+    f(z) match {
+      case Some((a, s)) => Stream.cons(a, unfold(s)(f))
+      case None => empty
+    }
+  }
+
+  val onesWithUnfold: Stream[Int] = unfold[Int, Any](1)(x => Some(1, x))
+
+  def constantWithUnfold[A](a: A): Stream[A] = unfold[A, Any](a)(x => Some(a, x))
+
+  def fromWithUnfold(n: Int): Stream[Int] = unfold[Int, Int](n)(x => Some(x, x + 1))
+
+  def fibsWithUnfold(s: (Int, Int)): Stream[Int] = unfold[Int, (Int, Int)](s)(x => Some(x._1, (x._2, x._1 + x._2)))
+
 }
 
 object StreamTest {
+
+  def toInt(str: String): Option[(Int, String)] = {
+    val i = str.toInt
+    if (i > 10) None
+    else Some(i, (i + 1).toString)
+  }
+
   def main(args: Array[String]): Unit = {
 
     val stream = Stream(1, 2, 3)
@@ -125,6 +150,17 @@ object StreamTest {
     println("append: " + stream.append(stream).toList)
 
     println("flatMap: " + stream.flatMap(x => Stream(x - 1, x, x + 1)).toList)
+
+    println("from(1).take(3): " + from(1).take(3).toList)
+
+    println("fibs: " + fibs(0, 1).take(8).toList)
+
+    println("unfold: " + unfold[Int, String]("1")(toInt).take(23).toList)
+
+    println("ones: " + onesWithUnfold.take(3).toList)
+    println("constant: " + constantWithUnfold("a").take(3).toList)
+    println("from: " + fromWithUnfold(3).take(3).toList)
+    println("fibs: " + fibsWithUnfold((0, 1)).take(8).toList)
 
   }
 }
